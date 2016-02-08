@@ -97,7 +97,7 @@ function introduce(bot, message) {
     react(bot, 'thumbsup', message, noop)
     bot.reply(message, {
         text: 'Let\'s play BINGO:exclamation: Be the first to send any of my secret magic words and win:trophy:\n' +
-        `Suggest secret words by sending <@${botUid}> a private message:love_letter: starting with *add*` +
+        `Suggest secret words by sending <@${botUid}> a private message:love_letter: starting with *add*\n` +
         'e.g. `add :cake: "big data" landslide` to add :cake:, landslide and big data as bingo words',
         icon_emoji: `:${emoji}:`,
         username: 'bingo'
