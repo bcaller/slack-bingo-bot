@@ -3,13 +3,17 @@ Slack bot that listens for special words and shouts bingo when you say them. Sla
 
 A really simple unintelligent bot.
 `/invite @bingo` invites the bingo bot to the channel.
+![hello](https://raw.githubusercontent.com/bcaller/slack-bingo-bot/images-for-readme/hello.PNG)
+
+To add words to the list, private message @bingo, but the user who adds the word is excluded from getting the bingo. `add banana reload "internet of things"`
+
+![reload](https://raw.githubusercontent.com/bcaller/slack-bingo-bot/images-for-readme/reload.PNG)
+
 The first time a key word like banana is used, @bingo will shout Bingo and show a GIF!
 
-To add words to the list, private message @bingo. `add banana`
+![spreadsheet](https://raw.githubusercontent.com/bcaller/slack-bingo-bot/images-for-readme/spreadsheet.PNG)
 
-Relies on botkit. GIFs from giphy.
-
-Uses arrow functions, let and template strings because I love arrow functions.
+Relies on botkit. GIFs from giphy. Uses arrow functions, `let` and template strings, so use an appropriate Node version.
 
 # Integration
 ## Slack Settings
