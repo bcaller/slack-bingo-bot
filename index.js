@@ -8,16 +8,15 @@ var Botkit = require('botkit')
     , emoji = "boom"
     , react = require('./react')
     , noop = ()=>undefined
-
-var PERSIST_BINGO_WORDS = process.env.PERSIST_BINGO_WORDS && process.env.PERSIST_BINGO_WORDS != 0
-var botUid;
-
-var controller = Botkit.slackbot({
-    logLevel: 3
-    //debug: true
-    //include "log: false" to disable logging
-    //or a "logLevel" integer from 0 to 7 to adjust logging verbosity
-})
+    , PERSIST_BINGO_WORDS = process.env.PERSIST_BINGO_WORDS && process.env.PERSIST_BINGO_WORDS != 0
+    , botUid
+    , words = []
+    , controller = Botkit.slackbot({
+        logLevel: 3
+        //debug: true
+        //include "log: false" to disable logging
+        //or a "logLevel" integer from 0 to 7 to adjust logging verbosity
+    })
 
 controller.on('file_shared', () => {
     console.log('file shared!', arguments)
@@ -30,8 +29,6 @@ controller.spawn({
     if(err) throw err
     botUid = payload.self.id
 })
-
-let words = []
 
 readFile('initial.txt', 'utf8').then(txt => {
     Promise.map(txt.split(/[\n\r]+/), w => addWord(w), {concurrency: 5})
