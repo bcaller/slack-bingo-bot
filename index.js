@@ -99,7 +99,8 @@ function introduce(bot, message) {
         text: 'Let\'s play BINGO:exclamation: Be the first to send any of my secret magic words and win:trophy:\n' +
         `Suggest secret words by sending <@${botUid}> a private message:love_letter: starting with *add*` +
         'e.g. `add :cake: "big data" landslide` to add :cake:, landslide and big data as bingo words',
-        icon_emoji: `:${emoji}:`
+        icon_emoji: `:${emoji}:`,
+        username: 'bingo'
     });
 }
 
