@@ -11,6 +11,7 @@ var Botkit = require('botkit')
     , PERSIST_BINGO_WORDS = process.env.PERSIST_BINGO_WORDS && process.env.PERSIST_BINGO_WORDS != 0
     , botUid
     , words = []
+    , foundWords = []
     , controller = Botkit.slackbot({
         logLevel: 3
         //debug: true
@@ -136,7 +137,25 @@ controller.on('ambient', function ambient(bot, message) {
             }
             return true
         })
+
+        var alreadyFound = foundWords.filter(fw => {
+            if (fw.regExp.test(message.text)) {
+                return true;
+            }
+
+            return false
+        });
+
         if (found.length) {
+
+            found.map(f => {
+                foundWords.push({
+                    word: f.word,
+                    usr: message.user,
+                    regExp: f.regExp
+                })
+            });
+
             let foundStr = joinAndCommas(found.map(w => w.word))
             react(bot, emoji, message, noop)
             let poser = found.map(w => w.addedBy ? `<@${w.addedBy}>` : '').join(' ')
@@ -145,6 +164,20 @@ controller.on('ambient', function ambient(bot, message) {
                 text: `Bingo! <@${message.user}> said ${foundStr}! There are ${words.length || "no"} bingo words left to discover! ${poser}`,
                 icon_emoji: `:${emoji}:`,
                 attachments: found.filter(w => w.gif).map(attachmentGif)
+            })
+        }
+
+        if (alreadyFound.length) {
+            console.log(alreadyFound);
+            let foundStr = joinAndCommas(alreadyFound.map(w => {
+                if (w != undefined) {
+                    return w.word
+                }
+            }))
+            bot.reply(message, {
+                username: 'bingo',
+                text: `The following words were already bingoed: ${foundStr}`,
+                icon_emoji: `:${emoji}:`
             })
         }
     }
