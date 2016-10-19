@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "bluebird": "^3.2.2",
-    "botkit": "0.0.5",
+    "botkit": "0.4",
     "request-promise": "^2.0.0"
   }
 }
