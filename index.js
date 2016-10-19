@@ -19,10 +19,6 @@ var Botkit = require('botkit')
         //or a "logLevel" integer from 0 to 7 to adjust logging verbosity
     })
 
-controller.on('file_shared', () => {
-    console.log('file shared!', arguments)
-})
-
 // connect the bot to a stream of messages
 controller.spawn({
     token: process.env.SLACK_TOKEN
@@ -120,19 +116,6 @@ controller.on('ambient', function ambient(bot, message) {
             if (w.addedBy != message.user && w.regExp.test(message.text)) {
                 found.push(w)
 
-                // Perhaps it is actually too annoying to send a private message as well
-                if(w.addedBy && w.addedBy.length) {
-                    bot.startPrivateConversation({user: w.addedBy}, (err, convo) => {
-                        if(err || !convo) return;
-                        var attachments = w.gif ? [attachmentGif(w)] : []
-                        convo.say({
-                            text: `Your bingo ${w.word} was bingoed by <@${message.user}>!\n${message.text}`,
-                            attachments: attachments,
-                            icon_emoji: `:${emoji}:`
-                        })
-                    })
-                }
-
                 return PERSIST_BINGO_WORDS
             }
             return true
@@ -168,7 +151,6 @@ controller.on('ambient', function ambient(bot, message) {
         }
 
         if (alreadyFound.length) {
-            console.log(alreadyFound);
             let foundStr = joinAndCommas(alreadyFound.map(w => {
                 if (w != undefined) {
                     return w.word
