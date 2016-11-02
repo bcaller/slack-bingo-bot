@@ -104,6 +104,7 @@ function loadWords() {
 }
 
 function exitHandler() {
+    bot.destroy(bot);
     persistence.save(words, foundWords, function(err) {
         if (err) {
             throw err;
@@ -112,9 +113,6 @@ function exitHandler() {
             process.exit(0);
         }
     });
-    if (typeof  bot.destroy === 'function') {
-        bot.destroy(bot);
-    }
 }
 
 //---------------------------
