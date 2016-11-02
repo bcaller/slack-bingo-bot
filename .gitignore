@@ -32,3 +32,5 @@ node_modules
 
 #Intellij
 .idea
+
+save.json

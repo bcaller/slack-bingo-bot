@@ -12,6 +12,8 @@ var Botkit = require('botkit')
     , botUid
     , words = []
     , foundWords = []
+    , persistence = require('./persistence')
+    , bot
     , controller = Botkit.slackbot({
         logLevel: 3
         //debug: true
@@ -19,17 +21,9 @@ var Botkit = require('botkit')
         //or a "logLevel" integer from 0 to 7 to adjust logging verbosity
     })
 
-// connect the bot to a stream of messages
-controller.spawn({
-    token: process.env.SLACK_TOKEN
-}).startRTM((err, bot, payload) => {
-    if(err) throw err
-    botUid = payload.self.id
-})
-
-readFile('initial.txt', 'utf8').then(txt => {
-    Promise.map(txt.split(/[\n\r]+/), w => addWord(w), {concurrency: 5})
-})
+//---------------------------
+// Global functions
+//---------------------------
 
 function safeRegex(s) {
     //  . [ ] \ * + { } ? -
@@ -69,6 +63,64 @@ function addWord(toAdd, addedBy) {
     }).catch(noop)
 }
 
+function introduce(bot, message) {
+    react(bot, 'thumbsup', message, noop)
+    bot.reply(message, {
+        text: 'Let\'s play BINGO:exclamation: Be the first to send any of my secret magic words and win:trophy:\n' +
+        `Suggest secret words by sending <@${botUid}> a private message:love_letter: starting with *add*\n` +
+        'e.g. `add :cake: "big data" landslide` to add :cake:, landslide and big data as bingo words',
+        icon_emoji: `:${emoji}:`,
+        username: 'bingo'
+    });
+}
+
+function attachmentGif(w) {
+    return {
+        fallback: `There was a GIF here: ${w.word}`,
+        color: "#36a64f",
+        image_url: w.gif
+    }
+}
+
+function loadWords() {
+    persistence.load(function(remainingWords, bingoedWords, err){
+        if (err == undefined) {
+            console.log('Loaded saved words successfully');
+            foundWords = bingoedWords.filter(w => {
+                w.regExp= makeRegex(w.word);
+                return true;
+            });
+            words = remainingWords.filter(w => {
+                w.regExp= makeRegex(w.word);
+                return true;
+            });
+        } else {
+            console.log("Load words from initial.txt");
+            readFile('initial.txt', 'utf8').then(txt => {
+                Promise.map(txt.split(/[\n\r]+/), w => addWord(w), {concurrency: 5})
+            })
+        }
+    });
+}
+
+function exitHandler() {
+    persistence.save(words, foundWords, function(err) {
+        if (err) {
+            throw err;
+        } else {
+            console.log('Wordlist and found words saved successfully.');
+            process.exit(0);
+        }
+    });
+    if (typeof  bot.destroy === 'function') {
+        bot.destroy(bot);
+    }
+}
+
+//---------------------------
+// Event handler
+//---------------------------
+
 controller.hears('add', ['direct_message'], (bot, message) => {
     //We need to extract single words and quoted words
     message.text.match(/(?:"([^"]+)"|([^"\s]+))/g).splice(1).forEach(w => {
@@ -87,26 +139,7 @@ controller.hears('cheat', ['direct_message'], (bot, message) => {
     bot.reply(message, words.map(w => w.word).join(', '))
 })
 
-function introduce(bot, message) {
-    react(bot, 'thumbsup', message, noop)
-    bot.reply(message, {
-        text: 'Let\'s play BINGO:exclamation: Be the first to send any of my secret magic words and win:trophy:\n' +
-        `Suggest secret words by sending <@${botUid}> a private message:love_letter: starting with *add*\n` +
-        'e.g. `add :cake: "big data" landslide` to add :cake:, landslide and big data as bingo words',
-        icon_emoji: `:${emoji}:`,
-        username: 'bingo'
-    });
-}
-
 controller.hears(['hello', 'hi', 'introduce'], ['direct_message', 'direct_mention'], introduce)
-
-function attachmentGif(w) {
-    return {
-        fallback: `There was a GIF here: ${w.word}`,
-        color: "#36a64f",
-        image_url: w.gif
-    }
-}
 
 controller.on('ambient', function ambient(bot, message) {
     if (message.type == 'message') {
@@ -155,7 +188,8 @@ controller.on('ambient', function ambient(bot, message) {
                 if (w != undefined) {
                     return w.word
                 }
-            }))
+            }));
+
             bot.reply(message, {
                 username: 'bingo',
                 text: `The following words were already bingoed: ${foundStr}`,
@@ -168,3 +202,19 @@ controller.on('ambient', function ambient(bot, message) {
 controller.on('bot_channel_join', (b, d) => {
     introduce(b, d)
 })
+
+//---------------------------
+
+//catches ctrl+c event
+process.on('SIGINT', exitHandler);
+
+// connect the bot to a stream of messages
+controller.spawn({
+    token: process.env.SLACK_TOKEN
+}).startRTM((err, b, payload) => {
+    if(err) throw err
+    botUid = payload.self.id
+    bot= b;
+})
+
+loadWords();
